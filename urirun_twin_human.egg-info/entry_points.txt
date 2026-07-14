@@ -1,0 +1,2 @@
+[urirun.connectors]
+twin-human = urirun_twin_human.core:urirun_bindings

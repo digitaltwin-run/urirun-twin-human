@@ -1,0 +1,112 @@
+Metadata-Version: 2.4
+Name: urirun-twin-human
+Version: 0.1.0
+Summary: urirun-twin-human — Digital Twin actors (human impersonators) exposed as URI processes. Can click, unblock tickets, and act as specific persons using LLM (OpenRouter).
+Author: Tom Sapletta
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: urirun
+Requires-Dist: litellm
+Requires-Dist: python-dotenv
+Provides-Extra: full
+Requires-Dist: urirun-connector-kvm; extra == "full"
+Requires-Dist: urirun-connector-grants; extra == "full"
+Requires-Dist: urirun-connector-planfile; extra == "full"
+
+# urirun-twin-human
+
+Digital Twin "human actors" from the **urirun-twin-*** series.
+
+Exposes **URI processes** (`human://...`) that let digital twins impersonate concrete persons from the Digital Twin registry (`digital-persons.json`).
+
+These twins can:
+- **Unblock tickets** (record grants via unblock_ledger + force planfile open/ready + clean blocking labels like `actor:human`, `waiting:*`)
+- **Click / control desktops** via KVM (on lenovo "laptop", nvidia etc.)
+- **Reason with LLM** (OpenRouter — config loaded from `urirun/.env` : `OPENROUTER_API_KEY` + `LLM_MODEL`)
+- Act with the identity/competencies/grants of a chosen person (e.g. `tom`, `claude-coder`, custom "human-actor")
+
+## Goal in the system
+Make autonomous loops (koru + work queue) able to perform steps that used to require a real human:
+- Unblock waiting tickets
+- Perform GUI clicks on controlled nodes (lenovo desktop via KVM)
+- Decide using LLM while "pretending" to be a specific actor
+
+## URI scheme
+
+`human://<person_id>/...`
+
+Examples:
+
+```bash
+# Impersonate
+human://tom/actor/command/impersonate
+
+# Unblock a ticket (as this actor)
+human://tom/ticket/command/unblock?ticket=IFURI-226&reason="kolejno autonomous unblock via twin"
+
+# KVM click / type on lenovo laptop (as the actor)
+human://lenovo-node/kvm/command/click?node=laptop&x=420&y=180
+human://tom/kvm/command/click?node=laptop&text="hello mateusz"&key=return
+
+# LLM reasoning as the person
+human://claude-coder/llm/command/reason?prompt="Should I unblock this KVM ticket now?"
+
+# High-level execute (LLM decides + acts)
+human://tom/action/command/execute?goal="unblock IFURI-226 and send signal via desktop"
+```
+
+## Configuration (LLM from urirun/.env)
+
+```env
+OPENROUTER_API_KEY=sk-or-...
+LLM_MODEL=openrouter/google/gemini-3.5-flash
+```
+
+The twin uses `litellm` — any `openrouter/...` model works.
+
+## Digital Twin integration
+
+Twins load persons from:
+
+`~/.urirun/host-dashboard/digital-persons.json` (or `URIRUN_DIGITAL_PERSONS`)
+
+They inherit:
+- `competencies`
+- `grants` (used when recording unblocks)
+- `type` (human vs digital)
+
+Example persons already include `kvm`, `unblock`, `signal`, `node:lenovo` competencies.
+
+## Installation (dev)
+
+```bash
+cd urirun-twin-human
+pip install -e .
+# or in the main if-uri venv
+pip install -e /path/to/urirun-twin-human
+```
+
+The connector registers as `twin-human` (scheme `human`).
+
+## How it helps autonomy (kolejno context)
+
+Previously tickets like IFURI-226 were stuck on `actor:human` + manual handoff (signal-cli link).
+
+With `urirun-twin-human`:
+1. Grant the type (`kvm:lenovo`, `signal-gui`, `unblock:*`)
+2. Call `human://<actor>/ticket/command/unblock`
+3. Or high-level `human://.../action/command/execute`
+4. The twin (LLM-powered) can also decide + perform KVM clicks to actually operate the desktop Signal app etc.
+
+This turns "human required" steps into delegable autonomous twin actions.
+
+## Related
+
+- `urirun-connector-twin`
+- `urirun-connector-human-twin`
+- `urirun-connector-grants` (unblock_ledger)
+- `urirun-connector-kvm`
+- `urirun-connector-work/goal.py` (signal-gui-kvm channel)
+- Digital persons + work queue grants
+
+See also the updated IFURI-226 handoff for a concrete use of this twin.

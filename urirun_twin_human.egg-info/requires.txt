@@ -1,0 +1,8 @@
+urirun
+litellm
+python-dotenv
+
+[full]
+urirun-connector-kvm
+urirun-connector-grants
+urirun-connector-planfile

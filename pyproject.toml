@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "urirun-twin-human"
+version = "0.1.0"
+description = "urirun-twin-human — Digital Twin actors (human impersonators) exposed as URI processes. Can click, unblock tickets, and act as specific persons using LLM (OpenRouter)."
+authors = [{name = "Tom Sapletta"}]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "urirun",
+    "litellm",
+    "python-dotenv",
+    # the grants and planfile are expected in the urirun host env
+]
+
+[project.optional-dependencies]
+full = ["urirun-connector-kvm", "urirun-connector-grants", "urirun-connector-planfile"]
+
+[project.entry-points."urirun.connectors"]
+twin-human = "urirun_twin_human.core:urirun_bindings"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["urirun_twin_human*"]
